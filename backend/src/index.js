@@ -19,14 +19,14 @@ app.use(cookieparser());
 
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "development"
-        ? "http://localhost:5173"
-        : true,
+    origin: process.env.NODE_ENV === "development"
+      ? "http://localhost:5173"
+      : "https://talkative-hduy.onrender.com", // ⭐ Your frontend URL
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
