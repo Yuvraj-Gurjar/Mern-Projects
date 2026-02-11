@@ -3,7 +3,10 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:8080" : "/";
+// FIXED: Use backend URL for socket connection in production
+const BASE_URL = import.meta.env.MODE === "development" 
+  ? "http://localhost:8080" 
+  : "https://mern-projects-uqjn.onrender.com";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -97,6 +100,8 @@ export const useAuthStore = create((set, get) => ({
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
 
+    console.log("🔌 Connecting to socket at:", BASE_URL);
+
     const socket = io(BASE_URL, {
       query: {
         userId: authUser._id,
@@ -108,7 +113,16 @@ export const useAuthStore = create((set, get) => ({
     set({ socket: socket });
 
     socket.on("getOnlineUsers", (userIds) => {
+      console.log("👥 Online users:", userIds);
       set({ onlineUsers: userIds });
+    });
+
+    socket.on("connect", () => {
+      console.log("✅ Socket connected successfully");
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("❌ Socket connection error:", error);
     });
   },
 

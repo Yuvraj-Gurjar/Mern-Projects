@@ -9,7 +9,6 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
-  isTyping: false,
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -18,7 +17,7 @@ export const useChatStore = create((set, get) => ({
       set({ users: res.data });
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast.error(error.response?.data?.message || "Failed to load users");
+      toast.error(error.response?.data?.message || "Failed to fetch users");
     } finally {
       set({ isUsersLoading: false });
     }
@@ -31,7 +30,7 @@ export const useChatStore = create((set, get) => ({
       set({ messages: res.data });
     } catch (error) {
       console.error("Error fetching messages:", error);
-      toast.error(error.response?.data?.message || "Failed to load messages");
+      toast.error(error.response?.data?.message || "Failed to fetch messages");
     } finally {
       set({ isMessagesLoading: false });
     }
@@ -39,66 +38,35 @@ export const useChatStore = create((set, get) => ({
 
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
-    
-    if (!selectedUser) {
-      toast.error("No user selected");
-      return;
-    }
-
     try {
-      console.log("🚀 Sending message to backend:", {
-        receiverId: selectedUser._id,
-        hasText: !!messageData.text,
-        hasImage: !!messageData.image,
-        imageLength: messageData.image?.length
-      });
-
-      const res = await axiosInstance.post(
-        `/messages/send/${selectedUser._id}`,
-        messageData
-      );
-
-      console.log("✅ Message sent successfully:", res.data);
-
-      // Update messages in state
+      const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
       set({ messages: [...messages, res.data] });
-
     } catch (error) {
-      console.error("❌ Error sending message:", error);
-      console.error("Response data:", error.response?.data);
-      
-      const errorMessage = error.response?.data?.message || "Failed to send message";
-      toast.error(errorMessage);
-      
-      // Re-throw so the component can handle it
-      throw error;
+      console.error("Error sending message:", error);
+      toast.error(error.response?.data?.message || "Failed to send message");
     }
   },
 
-  subscribeToMessage: () => {
+  subscribeToMessages: () => {
     const { selectedUser } = get();
     if (!selectedUser) return;
 
     const socket = useAuthStore.getState().socket;
-    if (!socket) return;
 
     socket.on("newMessage", (newMessage) => {
-      const isMessageFromSelectedUser = newMessage.senderId === selectedUser._id;
-      
-      if (isMessageFromSelectedUser) {
-        set({ messages: [...get().messages, newMessage] });
-      }
+      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      if (!isMessageSentFromSelectedUser) return;
+
+      set({
+        messages: [...get().messages, newMessage],
+      });
     });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
-    if (socket) {
-      socket.off("newMessage");
-    }
+    socket.off("newMessage");
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
-  
-  setTyping: (isTyping) => set({ isTyping }),
 }));
