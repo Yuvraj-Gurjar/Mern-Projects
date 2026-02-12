@@ -10,7 +10,7 @@ const ChatContainer = () => {
     messages,
     getMessages,
     sendMessage,
-    subscribeToMessage,
+    subscribeToMessages,  // ✅ FIXED: Added 's' to match store function
     unsubscribeFromMessages,
     selectedUser,
     isMessagesLoading,
@@ -25,11 +25,11 @@ const ChatContainer = () => {
   useEffect(() => {
     if (selectedUser?._id) {
       getMessages(selectedUser._id);
-      subscribeToMessage();
+      subscribeToMessages();  // ✅ FIXED: Added 's'
     }
 
     return () => unsubscribeFromMessages();
-  }, [selectedUser?._id, getMessages, subscribeToMessage, unsubscribeFromMessages]);
+  }, [selectedUser?._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);  // ✅ FIXED: Added 's' in dependency array
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
