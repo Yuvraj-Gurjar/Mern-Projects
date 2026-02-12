@@ -10,26 +10,29 @@ const ChatContainer = () => {
     messages,
     getMessages,
     sendMessage,
-    subscribeToMessages,  // ✅ FIXED: Added 's' to match store function
+    subscribeToMessages,
     unsubscribeFromMessages,
     selectedUser,
     isMessagesLoading,
   } = useChatStore();
   
-  const { authUser } = useAuthStore();
+  const { authUser, onlineUsers } = useAuthStore();
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const messageEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  
+  // ✅ FIX: Check if selected user is actually online
+  const isUserOnline = onlineUsers.includes(selectedUser?._id);
 
   useEffect(() => {
     if (selectedUser?._id) {
       getMessages(selectedUser._id);
-      subscribeToMessages();  // ✅ FIXED: Added 's'
+      subscribeToMessages();
     }
 
     return () => unsubscribeFromMessages();
-  }, [selectedUser?._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);  // ✅ FIXED: Added 's' in dependency array
+  }, [selectedUser?._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -119,7 +122,10 @@ const ChatContainer = () => {
         </div>
         <div>
           <h3 className="font-medium">{selectedUser?.fullName}</h3>
-          <p className="text-xs text-base-content/70">Online</p>
+          {/* ✅ FIX: Show actual online status */}
+          <p className={`text-xs ${isUserOnline ? "text-green-400" : "text-zinc-400"}`}>
+            {isUserOnline ? "Online" : "Offline"}
+          </p>
         </div>
       </div>
 
